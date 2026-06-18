@@ -1,10 +1,10 @@
-# 회의록 자동 기록 시스템 (meeting_record)
+# 회의록 자동 기록 보조 시스템 (meeting_record)
 
 [![Release](https://img.shields.io/github/v/release/thisgun/meeting_record?style=flat)](https://github.com/thisgun/meeting_record/releases)
 [![License](https://img.shields.io/badge/license-LGPL--2.1-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org)
 
-핸드폰으로 녹음한 회의 음성 파일을 업로드하면, AI가 자동으로 화자를 구분하고 텍스트로 변환한 뒤 요약해서 게시판에 등록해주는 도구입니다.
+핸드폰으로 녹음한 회의 음성 파일을 업로드하면, AI가 화자 구분·텍스트 변환·요약을 도와 회의록 초안을 만들고, 필요하면 게시판 등록까지 보조하는 도구입니다.
 
 **모든 처리는 로컬 PC에서 일어납니다** — 음성/텍스트가 외부 클라우드로 나가지 않고, 비용도 0원.
 
@@ -58,7 +58,7 @@ python main.py "회의.mp3" --no-upload   # 첫 실행: G5 없이 로컬 저장�
 > - **cmd에서 `Activate.ps1`을 실행하면 메모장이 열립니다** — `.ps1`은 PowerShell 전용이라 cmd에선 파일이 "열기"만 됩니다. cmd에선 위 `activate.bat`을 쓰세요.
 > - **PowerShell에서 "실행 정책" 오류**가 나면 한 번만: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
 
-### 2. 그누보드5 PHP 플러그인 (게시판 자동 등록)
+### 2. 그누보드5 PHP 플러그인 (게시판 등록 보조)
 
 [Releases 페이지](https://github.com/thisgun/meeting_record/releases/latest)에서 `g5_meeting_api-vX.Y.Z.zip` 다운로드 → 압축 풀어서 안의 `plugin/meeting_api/` 폴더를 그누보드5의 `plugin/` 안에 FTP 업로드. 자세한 절차는 아래 [그누보드5 plugin 표준 배치](#그누보드5-plugin-표준-배치) 섹션.
 
@@ -110,24 +110,24 @@ python -m streamlit run app.py
 
 ### 사용 시나리오
 
-회의를 마치고 이런 작업을 자동화하고 싶다고 상상해보세요:
+회의를 마치고 이런 반복 작업을 줄이고 싶다고 상상해보세요:
 
 1. 회의 중에 핸드폰으로 녹음 버튼만 누름
 2. 녹음 끝나고 PC에 음성 파일을 옮김
 3. 명령어 한 번 실행
-4. 자동으로:
+4. 도구가 회의록 초안 작성을 보조:
    - 누가 어떤 말을 했는지 화자별로 구분
    - 음성을 한국어 텍스트로 변환
    - 회의 제목, 개요, 결정 사항, 액션 아이템으로 요약
    - 로컬 데이터베이스에 저장
-   - 사내 게시판(그누보드5)에 자동 등록
+   - 설정한 경우 사내 게시판(그누보드5)에 등록
 
-이 모든 걸 한 번의 명령으로 처리합니다.
+이 모든 과정을 한 번의 명령으로 처리하되, 결과는 **검수 가능한 회의록 초안**으로 보는 것을 권장합니다.
 
 ### 결과 예시
 
-`python main.py "산업안전_회의.mp3"` 한 줄을 실행하면, 이런 회의록이 자동 생성되어 SQLite와
-그누보드5 게시판에 등록됩니다 (실제 출력 형식):
+`python main.py "산업안전_회의.mp3"` 한 줄을 실행하면, 이런 회의록 초안이 생성되어 SQLite에
+저장되고, 업로드 설정이 되어 있으면 그누보드5 게시판 등록까지 진행됩니다 (실제 출력 형식):
 
 ```markdown
 # 산업안전 강화 및 중대재해 감축 방안 논의
@@ -158,7 +158,7 @@ python -m streamlit run app.py
 
 ### 왜 만들었나?
 
-- **회의록 작성 시간 절약**: 매번 손으로 정리 안 해도 됨
+- **회의록 작성 시간 절약**: 초안을 먼저 만들고 사람이 검수·보완
 - **검색 가능한 기록**: 모든 회의가 DB와 게시판에 누적됨
 - **프라이버시**: 모든 처리가 로컬 PC에서 수행됨 (음성/텍스트가 외부 클라우드로 안 나감)
 - **비용 0원**: 오픈소스 + 로컬 LLM (Ollama)만 사용
@@ -251,7 +251,8 @@ meeting_record/
 │       ├── update_comment.php   # POST: 댓글 본문/작성자 수정
 │       ├── delete_post.php      # POST: 게시글과 댓글 삭제
 │       ├── cleanup_tests.php    # POST: 오래된 연결 테스트 글 정리
-│       └── setup_board.php      # POST: 게시판 자동 생성
+│       ├── setup_board.php      # POST: 게시판 자동 생성
+│       └── setup_member.php     # POST: 회의록봇 회원 계정 자동 생성
 │
 └── <그누보드5루트>/             # ③ 별도 설치 위치. 저장소에는 포함되지 않음
     └── plugin/meeting_api/      # 위 배포 패키지를 복사해 배치
@@ -385,7 +386,7 @@ C:\xampp\htdocs\gnuboard5\plugin\meeting_api\
 | Ollama | 최신 버전 권장 (로컬 요약 LLM 실행) |
 | 요약 모델 | `gemma4:e2b-it-qat` (4.3GB, 기본) — `ollama pull gemma4:e2b-it-qat` |
 | GPU (선택) | NVIDIA + CUDA면 수십 배 가속. **VRAM 8GB**면 기본 모델이 100% GPU 적재 |
-| 그누보드5 (선택) | 게시판 자동 등록 시. XAMPP·cafe24 등 PHP 호스팅 (없으면 `--no-upload`) |
+| 그누보드5 (선택) | 게시판 연동/등록 보조 시. XAMPP·cafe24 등 PHP 호스팅 (없으면 `--no-upload`) |
 
 > 📌 위 표는 **요구사항**이며 특정 버전 강제가 아닙니다. **개발·검증 환경(참고)**: Windows 11 ·
 > Python 3.11 · RTX 4060 8GB(CUDA 12.8) · XAMPP(PHP 8.2, MariaDB 10.4). 다른 OS·GPU·CPU
@@ -1128,6 +1129,28 @@ python doctor.py
    `config.local.php`에 `define('meeting_API_ALLOW_UNMARKED_WRITES', true);`를 잠깐 추가할 수 있습니다.
    작업 후에는 다시 제거하거나 `false`로 되돌리세요.
 
+3-1. **(권장) 회의록봇 회원 계정** — 비공개/회원제 게시판이면 글이 *로그인한 회원* 글로
+   등록되도록 봇 계정을 사용하세요. `meeting_MB_ID`를 비워두면 기존처럼 비회원(게스트)
+   글로 등록됩니다(하위 호환).
+
+   ```php
+   // config.local.php
+   define('meeting_MB_ID', 'meetingbot');   // 봇 회원 아이디
+   define('meeting_WR_NAME', '회의록봇');     // 회원 닉네임/작성자명
+   // define('meeting_MB_PASSWORD', '');     // 비우면 setup 시 임의 생성(1회 응답에 표시)
+   // define('meeting_MB_LEVEL', 2);         // 기본 2(일반 회원). 게시판 글쓰기 레벨 이상으로
+   ```
+
+   계정 자동 생성(그누보드 관리자에서 직접 만들었다면 생략):
+   ```bash
+   curl -X POST -H "X-API-Token: YOUR_TOKEN" \
+     https://YOUR-DOMAIN/gnu5615/plugin/meeting_api/setup_member.php
+   ```
+   응답의 `report.member_created`가 `true`면 성공. 임의 생성 비밀번호는 `generated_password`에
+   1회만 표시되니 필요하면 보관하세요. 작업 후 `meeting_API_ALLOW_SETUP`을 `false`로 되돌리거나
+   `setup_member.php`를 삭제합니다. `health.php` 응답의 `author_mode`가 `member`,
+   `member_account_exists`가 `true`인지 확인하세요.
+
 4. **Python `.env`**:
    ```env
    G5_API_BASE=https://YOUR-DOMAIN/gnu5615/plugin/meeting_api
@@ -1181,7 +1204,7 @@ Remove-Item C:\xampp\htdocs\g5_meeting_api      # junction 정리
 #### 보안 주의사항
 
 - `config.local.php` 절대 git/FTP에서 공유 안 함 (토큰 노출)
-- `setup_board.php` 작업 후 `meeting_API_ALLOW_SETUP=false`로 되돌리거나 파일 즉시 삭제
+- `setup_board.php` / `setup_member.php` 작업 후 `meeting_API_ALLOW_SETUP=false`로 되돌리거나 파일 즉시 삭제
 - 가능하면 `meeting_API_ALLOWED_IPS`로 Python 실행 PC/서버 IP만 허용
 - API 본문 크기 제한 유지 (`meeting_API_MAX_*_BYTES`) — 기본값을 크게 올릴수록 서버 부하 위험 증가
 - 그누보드5 `install/` 폴더 운영 시 삭제

@@ -7,8 +7,18 @@
 ## [Unreleased]
 
 ### 추가
+- **회의록봇 회원 계정으로 글 등록** — 비공개/회원제 게시판에서 글·댓글이 *로그인한 회원* 글로
+  등록되도록 지원. `config.local.php`에 `meeting_MB_ID`를 지정하면 해당 회원 글로 등록되며,
+  비워두면 기존처럼 비회원(게스트) 글로 등록(하위 호환).
+- 봇 회원 계정 자동 생성 엔드포인트 **`setup_member.php`**(기존 `setup_board.php`와 동일하게
+  `meeting_API_ALLOW_SETUP=true`일 때만 동작). 비밀번호 미지정 시 임의 생성해 1회 응답에 표시.
+- `health.php` 응답에 `author_mode`(member/guest)·`member_account_exists` 추가 — 봇 계정 설정 상태를 점검.
 - Windows 초보자용 `setup.bat` / `scripts/setup_windows.ps1` 설치 도우미 추가.
   `.env` 생성, venv 구성, 패키지 설치, ffmpeg/Ollama 확인, 모델 다운로드, `doctor.py` 실행을 순서대로 안내.
+
+### 보안
+- 게스트 글의 기본 수정/삭제 비밀번호 `meeting_bot`(저장소에 공개돼 누구나 수정 가능했음) 제거 →
+  기본값 빈 문자열. 회원 글(`meeting_MB_ID` 설정 시)에는 게스트 비밀번호를 아예 쓰지 않음.
 
 ## [0.6.0] - 2026-06-10
 

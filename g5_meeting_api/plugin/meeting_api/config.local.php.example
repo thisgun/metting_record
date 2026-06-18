@@ -24,16 +24,28 @@ define('meeting_API_DEBUG', false);
 // 예: https://example.com/gnu5624
 // define('meeting_PUBLIC_BASE_URL', 'https://YOUR-DOMAIN/gnu5624');
 
-// setup_board.php를 실행할 때만 true로 바꾸고, 실행 후 false로 되돌리거나 파일을 삭제하세요.
+// setup_board.php / setup_member.php를 실행할 때만 true로 바꾸고, 실행 후 false로 되돌리거나 파일을 삭제하세요.
 // define('meeting_API_ALLOW_SETUP', true);
 
 // 선택: API 호출을 허용할 IP/CIDR 목록. 비워두면 IP 제한 없음.
 // 예: 집/사무실 고정 IP 또는 서버 간 통신 IP만 허용
 // define('meeting_API_ALLOWED_IPS', '127.0.0.1,203.0.113.10,203.0.113.0/24');
 
-// 회원으로 작성하려면 mb_id 지정 (운영 환경 권장)
-// define('meeting_MB_ID', 'admin');
-// define('meeting_WR_NAME', '회의록 자동 등록');
+// === 회의록봇 회원 계정 (비공개/회원제 게시판 권장) =========================
+// meeting_MB_ID 를 지정하면 글/댓글이 "로그인한 회원" 글로 등록된다(게스트 글 아님).
+// 비공개 서버에서 글 작성자가 봇 계정으로 표시되길 원하면 이 방식을 사용한다.
+//
+// 1) 봇 계정 아이디/표시이름 지정:
+// define('meeting_MB_ID', 'meetingbot');
+// define('meeting_WR_NAME', '회의록봇');           // 회원 닉네임/작성자명
+// define('meeting_MB_PASSWORD', '');               // 비우면 setup 시 임의 생성(1회 표시)
+// define('meeting_MB_LEVEL', 2);                   // 기본 2(일반 회원). 게시판 글쓰기 레벨 이상으로
+//
+// 2) 계정 자동 생성: meeting_API_ALLOW_SETUP=true 로 두고 setup_member.php 를 1회 POST 호출.
+//    (그누보드 관리자에서 직접 회원을 만들어도 됨 — 그 경우 setup_member.php 불필요)
+// 3) 확인 후 meeting_API_ALLOW_SETUP 를 false 로 되돌리거나 setup_*.php 삭제.
+//
+// meeting_MB_ID 를 비워두면 기존처럼 비회원(게스트) 글로 등록된다(하위 호환).
 
 // 기존 버전에서 생성된 marker 없는 글을 임시로 수정/삭제해야 할 때만 true.
 // 작업 후 false로 되돌리는 것을 권장.

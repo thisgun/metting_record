@@ -33,4 +33,26 @@ $board = sql_fetch("SELECT bo_table, bo_subject FROM $board_table_sql WHERE bo_t
 $report['board_exists'] = (bool)$board;
 $report['board_subject'] = $board['bo_subject'] ?? null;
 
+// 작성자 모드: meeting_MB_ID 설정 시 회원 글, 아니면 비회원(게스트) 글.
+$mb_id = trim((string)meeting_MB_ID);
+if ($mb_id === '') {
+    $report['author_mode'] = 'guest';
+    $report['mb_id'] = null;
+    $report['member_account_exists'] = null;
+} else {
+    $report['author_mode'] = 'member';
+    $report['mb_id'] = $mb_id;
+    $member_table_sql = meeting_sql_identifier($g5['member_table']);
+    $mb_id_esc = meeting_sql_escape($mb_id);
+    $member = sql_fetch("SELECT mb_id, mb_leave_date, mb_intercept_date
+        FROM $member_table_sql WHERE mb_id = '$mb_id_esc'");
+    $report['member_account_exists'] = (bool)$member;
+    // 회원 모드인데 계정이 없거나 차단 상태면 글 작성이 실패하므로 경고를 띄운다.
+    if (!$member) {
+        $report['member_warning'] = "meeting_MB_ID '$mb_id' 회원이 없습니다. setup_member.php 로 봇 계정을 먼저 생성하세요.";
+    } elseif (!empty($member['mb_leave_date']) || !empty($member['mb_intercept_date'])) {
+        $report['member_warning'] = "meeting_MB_ID '$mb_id' 계정이 탈퇴/차단 상태입니다.";
+    }
+}
+
 api_ok($report);

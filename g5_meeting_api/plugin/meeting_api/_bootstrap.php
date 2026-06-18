@@ -248,6 +248,67 @@ function write_table_of($bo_table) {
     return $g5['write_prefix'] . $bo_table;
 }
 
+/**
+ * 작성자(회원/비회원) 정보 해석.
+ *
+ * meeting_MB_ID가 설정돼 있으면 그누보드 회원으로 등록한다:
+ *   - 회원이 실제로 존재하는지 검증(없으면 명확한 설정 오류)
+ *   - 탈퇴/차단 계정 거부
+ *   - 게스트용 비밀번호를 쓰지 않음(회원 글)
+ * 비어 있으면 기존 비회원(게스트) 동작을 유지한다(하위 호환).
+ *
+ * 반환: ['is_member'=>bool, 'mb_id'=>string, 'name'=>string,
+ *        'email'=>string, 'use_guest_password'=>bool]
+ *
+ * _load_gnuboard5.php가 먼저 require되어 있어야 한다($g5/g5_member 접근).
+ */
+function meeting_resolve_author() {
+    global $g5;
+    $mb_id = trim((string)meeting_MB_ID);
+
+    // 비회원(게스트) 모드 — 기존 동작 유지
+    if ($mb_id === '') {
+        return [
+            'is_member' => false,
+            'mb_id' => '',
+            'name' => (string)meeting_WR_NAME,
+            'email' => (string)meeting_WR_EMAIL,
+            'use_guest_password' => true,
+        ];
+    }
+
+    // 회원 모드 — 계정 검증
+    if (!preg_match('/^[A-Za-z0-9_]+$/', $mb_id)) {
+        api_error(500, 'Server misconfigured: meeting_MB_ID has invalid characters (letters, numbers, underscore only).');
+    }
+    $member_table_sql = meeting_sql_identifier($g5['member_table']);
+    $mb_id_esc = meeting_sql_escape($mb_id);
+    $member = sql_fetch("SELECT mb_id, mb_nick, mb_name, mb_email, mb_leave_date, mb_intercept_date
+        FROM $member_table_sql WHERE mb_id = '$mb_id_esc'");
+    if (!$member) {
+        api_error(500, "Server misconfigured: meeting_MB_ID '$mb_id' 회원이 존재하지 않습니다. setup_member.php로 봇 계정을 먼저 생성하세요.");
+    }
+    if (!empty($member['mb_leave_date']) || !empty($member['mb_intercept_date'])) {
+        api_error(500, "Server misconfigured: meeting_MB_ID '$mb_id' 계정이 탈퇴/차단 상태입니다.");
+    }
+
+    // 표시 이름: 설정된 meeting_WR_NAME 우선, 없으면 회원 닉네임/이름
+    $name = (string)meeting_WR_NAME;
+    if ($name === '') $name = (string)$member['mb_nick'];
+    if ($name === '') $name = (string)$member['mb_name'];
+    // 이메일: 설정값 우선, 없으면 회원 이메일
+    $email = (string)meeting_WR_EMAIL;
+    if ($email === '') $email = (string)$member['mb_email'];
+
+    return [
+        'is_member' => true,
+        'mb_id' => (string)$member['mb_id'],
+        'name' => $name,
+        'email' => $email,
+        'use_guest_password' => false,
+    ];
+}
+
 function meeting_require_api_owned_marker($marker) {
     $marker = (string)$marker;
     if ($marker === (string)meeting_API_MARKER) {

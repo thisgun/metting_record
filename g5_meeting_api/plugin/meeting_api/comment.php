@@ -43,14 +43,17 @@ if (!$parent) {
 }
 meeting_require_api_owned_marker($parent['wr_10'] ?? '');
 
+$author = meeting_resolve_author();
 $wr_content = meeting_sql_escape($m_content);
-// 화자별 작성자명: 요청에 author_name 있으면 사용, 없으면 기본값
-$effective_name = $m_author_name !== '' ? $m_author_name : meeting_WR_NAME;
+// 화자별 작성자명: 요청에 author_name 있으면 사용, 없으면 작성자(회원/봇) 기본 이름
+$effective_name = $m_author_name !== '' ? $m_author_name : $author['name'];
 $wr_name = meeting_sql_escape(mb_substr($effective_name, 0, 50, 'UTF-8'));
-$wr_password = meeting_WR_PASSWORD ? meeting_sql_escape(sql_password(meeting_WR_PASSWORD)) : '';
-$wr_email = meeting_sql_escape(meeting_WR_EMAIL);
+// 회원 글에는 게스트 비밀번호를 쓰지 않는다(작성자 식별은 mb_id로 함).
+$wr_password = ($author['use_guest_password'] && meeting_WR_PASSWORD)
+    ? meeting_sql_escape(sql_password(meeting_WR_PASSWORD)) : '';
+$wr_email = meeting_sql_escape($author['email']);
 $wr_homepage = meeting_sql_escape(meeting_WR_HOMEPAGE);
-$mb_id_esc = meeting_sql_escape(meeting_MB_ID);
+$mb_id_esc = meeting_sql_escape($author['mb_id']);
 $api_marker = meeting_sql_escape(meeting_API_MARKER);
 $idempotency_key = meeting_sql_escape($m_idempotency_key);
 $ca_name = meeting_sql_escape($parent['ca_name'] ?? '');

@@ -27,9 +27,19 @@ if (!defined('G5_PATH_OVERRIDE')) {
 // 기본 설정 (config.local.php에서 덮어쓸 수 있음)
 if (!defined('meeting_BO_TABLE')) define('meeting_BO_TABLE', 'meeting');
 if (!defined('meeting_API_TOKEN')) define('meeting_API_TOKEN', 'change-me-please-use-strong-random-token');
+// 회의록봇 회원 계정. 값을 채우면 글/댓글이 해당 회원 글로 등록된다(권장).
+// 비워두면 비회원(게스트) 글로 등록된다(하위 호환).
+// 계정은 setup_member.php 로 자동 생성하거나 그누보드 관리자에서 만들 수 있다.
 if (!defined('meeting_MB_ID')) define('meeting_MB_ID', '');
+// setup_member.php 가 봇 계정을 만들 때 쓰는 비밀번호. 비우면 임의 생성 후 1회 응답에 표시.
+if (!defined('meeting_MB_PASSWORD')) define('meeting_MB_PASSWORD', '');
+// setup_member.php 가 봇 계정에 부여할 회원 레벨(대상 게시판 글쓰기 레벨 이상이어야 함).
+// 기본 2(일반 회원). 게시판 글쓰기 레벨이 더 높으면 그 값 이상으로 올리세요.
+if (!defined('meeting_MB_LEVEL')) define('meeting_MB_LEVEL', 2);
 if (!defined('meeting_WR_NAME')) define('meeting_WR_NAME', '회의록봇');
-if (!defined('meeting_WR_PASSWORD')) define('meeting_WR_PASSWORD', 'meeting_bot');
+// 비회원(게스트) 글의 수정/삭제 비밀번호. 저장소에 공개된 고정 비밀번호는 위험하므로
+// 기본값은 빈 문자열(게스트 폼에서 수정/삭제 불가). 회원 글(meeting_MB_ID 설정 시)에는 사용하지 않는다.
+if (!defined('meeting_WR_PASSWORD')) define('meeting_WR_PASSWORD', '');
 if (!defined('meeting_WR_EMAIL')) define('meeting_WR_EMAIL', '');
 if (!defined('meeting_WR_HOMEPAGE')) define('meeting_WR_HOMEPAGE', '');
 if (!defined('meeting_API_MARKER')) define('meeting_API_MARKER', 'meeting_api');

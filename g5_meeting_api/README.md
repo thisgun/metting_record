@@ -21,7 +21,8 @@ gnuboard5/
         ├── list_comments.php
         ├── update_comment.php
         ├── delete_post.php
-        └── setup_board.php           ← 게시판 자동 생성 후 삭제
+        ├── setup_board.php           ← 게시판 자동 생성 후 삭제
+        └── setup_member.php          ← 회의록봇 회원 계정 자동 생성 후 삭제
 ```
 
 ## 빠른 시작
@@ -48,11 +49,16 @@ gnuboard5/
 | POST | `delete_post.php` | 게시글과 댓글 삭제 |
 | POST | `cleanup_tests.php` | 오래된 연결 테스트 글 정리 |
 | POST | `setup_board.php` | 게시판 1회 자동 생성 |
+| POST | `setup_member.php` | 회의록봇 회원 계정 1회 자동 생성 |
 
 모든 API 요청은 헤더 `X-API-Token` 필수.
 `update_*`, `list_comments.php`, `delete_post.php`는 기본적으로 `post.php`가 생성한 marker 있는 게시글만 대상으로 동작합니다.
 기존 marker 없는 글을 임시로 다뤄야 할 때는 `config.local.php`에서 `meeting_API_ALLOW_UNMARKED_WRITES`를 true로 설정한 뒤 작업 후 되돌리세요.
-`setup_board.php`는 `config.local.php`에서 `meeting_API_ALLOW_SETUP`을 true로 켠 경우에만 실행됩니다.
+`setup_board.php` / `setup_member.php`는 `config.local.php`에서 `meeting_API_ALLOW_SETUP`을 true로 켠 경우에만 실행됩니다.
+
+비공개/회원제 게시판이라 글이 *로그인한 회원* 글로 등록되길 원하면 `config.local.php`에
+`meeting_MB_ID`(봇 회원 아이디)를 지정하고 `setup_member.php`를 1회 호출해 봇 계정을 만드세요.
+`meeting_MB_ID`를 비워두면 기존처럼 비회원(게스트) 글로 등록됩니다(하위 호환).
 
 기본 요청 크기 제한은 전체 JSON 3 MiB, 게시글 본문 2 MiB, 댓글 본문 256 KiB입니다.
 운영 환경에서 조정이 필요하면 `config.local.php`에 `meeting_API_MAX_BODY_BYTES`,

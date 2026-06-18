@@ -43,13 +43,16 @@ $write_table_sql = meeting_sql_identifier($write_table);
 $board_new_table_sql = meeting_sql_identifier($GLOBALS['g5']['board_new_table']);
 $board_table_sql = meeting_sql_identifier($GLOBALS['g5']['board_table']);
 
+$author = meeting_resolve_author();
 $wr_subject = meeting_sql_escape(mb_substr($m_subject, 0, 255, 'UTF-8'));
 $wr_content = meeting_sql_escape($m_content);
-$wr_name = meeting_sql_escape(meeting_WR_NAME);
-$wr_password = meeting_WR_PASSWORD ? meeting_sql_escape(sql_password(meeting_WR_PASSWORD)) : '';
-$wr_email = meeting_sql_escape(meeting_WR_EMAIL);
+$wr_name = meeting_sql_escape(mb_substr($author['name'], 0, 255, 'UTF-8'));
+// 회원 글에는 게스트 비밀번호를 쓰지 않는다(작성자 식별은 mb_id로 함).
+$wr_password = ($author['use_guest_password'] && meeting_WR_PASSWORD)
+    ? meeting_sql_escape(sql_password(meeting_WR_PASSWORD)) : '';
+$wr_email = meeting_sql_escape($author['email']);
 $wr_homepage = meeting_sql_escape(meeting_WR_HOMEPAGE);
-$mb_id_esc = meeting_sql_escape(meeting_MB_ID);
+$mb_id_esc = meeting_sql_escape($author['mb_id']);
 $api_marker = meeting_sql_escape(meeting_API_MARKER);
 $idempotency_key = meeting_sql_escape($m_idempotency_key);
 $ip = meeting_sql_escape($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
